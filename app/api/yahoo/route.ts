@@ -51,7 +51,7 @@ const SECTOR_NAME_MAP: Record<string, string> = {
   "REIT": "REIT",
 };
 
-export function getSectorFromCode(code: string): string {
+function getSectorFromCode(code: string): string {
   const jpxSector = jpxSectors[code];
   if (jpxSector) {
     return SECTOR_NAME_MAP[jpxSector] || jpxSector;
