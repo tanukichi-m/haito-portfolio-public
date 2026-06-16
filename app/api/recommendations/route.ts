@@ -27,23 +27,23 @@ export async function GET(request: NextRequest) {
         try {
           const yahoo = await getStockData(row.stock_code);
           return {
-            stockCode:     row.stock_code,
-            companyName:   yahoo.companyName || row.company_name,
-            sector:        row.sector,
-            currentPrice:  yahoo.currentPrice || row.purchase_price,
-            annualDividend: yahoo.annualDividend || 0,
-            shares:        row.shares,
-            purchasePrice: row.purchase_price,
+            stockCode:      row.stock_code,
+            companyName:    yahoo.companyName || row.company_name,
+            sector:         row.sector,
+            currentPrice:   yahoo.currentPrice || row.purchase_price,
+            annualDividend: row.annual_dividend || 0,
+            shares:         row.shares,
+            purchasePrice:  row.purchase_price,
           };
         } catch {
           return {
-            stockCode:     row.stock_code,
-            companyName:   row.company_name,
-            sector:        row.sector,
-            currentPrice:  row.purchase_price,
-            annualDividend: 0,
-            shares:        row.shares,
-            purchasePrice: row.purchase_price,
+            stockCode:      row.stock_code,
+            companyName:    row.company_name,
+            sector:         row.sector,
+            currentPrice:   row.purchase_price,
+            annualDividend: row.annual_dividend || 0,
+            shares:         row.shares,
+            purchasePrice:  row.purchase_price,
           };
         }
       })
@@ -56,34 +56,27 @@ export async function GET(request: NextRequest) {
 
     const sectorRatios     = calculateSectorRatios(holdings);
     const deficientSectors = getDeficientSectors(sectorRatios);
-    const recommendations  = generateRecommendations(
-      holdings.map((h) => ({
-        id: h.stockCode,
-        user_id: DEMO_USER_ID,
-        stock_code: h.stockCode,
-        company_name: h.companyName,
-        sector: h.sector,
-        shares: h.shares,
-        purchase_price: h.purchasePrice,
-        created_at: "",
-        current_price: h.currentPrice,
-        dividend_yield: 0,
-        annual_dividend: h.annualDividend,
-        current_value: h.currentPrice * h.shares,
-        annual_dividend_total: h.annualDividend * h.shares,
-        annual_dividend_total_after_tax: h.annualDividend * h.shares,
-        account_type: "特定口座",
-        gain_loss: 0,
-        gain_loss_pct: 0,
-      })),
-      sectorRatios.map((r) => ({
-        sector: r.sector,
-        ratio: r.ratio / 100,
-        targetRatio: 0.05,
-        maxRatio: 0.15,
-        isDeficient: deficientSectors.includes(r.sector),
-        isOverweight: false,
-      })),
+
+    const sectorScores = sectorRatios.map((r) => ({
+      sector:      r.sector,
+      ratio:       r.ratio / 100,
+      targetRatio: 0.05,
+      maxRatio:    0.15,
+      isDeficient: deficientSectors.includes(r.sector),
+      isOverweight: false,
+    }));
+
+    // SimpleHolding形式に変換
+    const simpleHoldings = holdings.map((h) => ({
+      stock_code:            h.stockCode,
+      sector:                h.sector,
+      current_value:         h.currentPrice * h.shares,
+      annual_dividend_total: h.annualDividend * h.shares,
+    }));
+
+    const recommendations = generateRecommendations(
+      simpleHoldings,
+      sectorScores,
       budget,
       dbRecommended || []
     );
@@ -97,9 +90,9 @@ export async function GET(request: NextRequest) {
             ...rec,
             stock: {
               ...rec.stock,
-              current_price:  yahoo.currentPrice,
+              current_price:   yahoo.currentPrice,
               annual_dividend: yahoo.annualDividend,
-              dividend_yield: yahoo.dividendYield,
+              dividend_yield:  yahoo.dividendYield,
             },
             estimatedCost: yahoo.currentPrice * 100,
           };
