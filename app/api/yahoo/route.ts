@@ -77,4 +77,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}// force redeploy 2026年 6月16日 火曜日 11時14分26秒 JST
