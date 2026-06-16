@@ -71,6 +71,8 @@ export async function GET(request: NextRequest) {
         annual_dividend: h.annualDividend,
         current_value: h.currentPrice * h.shares,
         annual_dividend_total: h.annualDividend * h.shares,
+        annual_dividend_total_after_tax: h.annualDividend * h.shares,
+        account_type: "特定口座",
         gain_loss: 0,
         gain_loss_pct: 0,
       })),
