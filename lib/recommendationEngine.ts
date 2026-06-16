@@ -1,7 +1,7 @@
 import { RecommendedStock, Recommendation } from "@/types/sector";
 import { HoldingWithValue } from "@/types/holding";
 import { SectorScore } from "@/types/score";
-import { SECTOR_MASTER, getDeficientSectors } from "./portfolioAnalyzer";
+import { sectorMaster, getDeficientSectors } from "./portfolioAnalyzer";
 
 // Built-in recommended stocks for deficient sectors
 const BUILTIN_RECOMMENDATIONS: RecommendedStock[] = [
@@ -61,7 +61,7 @@ export function generateRecommendations(
       .filter((s) => s.sector === sector && !heldCodes.has(s.stock_code))
       .sort((a, b) => a.priority - b.priority);
 
-    const sectorMeta = SECTOR_MASTER.find((m) => m.sector_name === sector);
+    const sectorMeta = sectorMaster.find((m) => m.sectorName === sector);
     const scoreImprovement = sectorMeta
       ? Math.round((sectorMeta.weight / 10) * 3)
       : 2;
