@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
       const trimmed = line.trim();
       if (!trimmed) continue;
 
-      const cols = trimmed.split(",").map((c: string) => c.trim().replace(/"/g, ""));
+      const rawCols: string[] = trimmed.split(",");
+const cols: string[] = rawCols.map(function(c: string) { return c.trim().replace(/"/g, ""); });
       const stockCode      = cols[0];
       const shares         = parseInt(cols[1], 10);
       const purchasePrice  = parseFloat(cols[2]);
