@@ -1,6 +1,6 @@
 import { RecommendedStock, Recommendation } from "@/types/sector";
 import { SectorScore } from "@/types/score";
-import { SECTOR_MASTER as SM, getDeficientSectors } from "@/lib/portfolioAnalyzer";
+
 import { sectorMaster } from "@/lib/portfolioAnalyzer";
 
 // HoldingWithValueの代わりに使う簡易型
