@@ -1,59 +1,65 @@
 import { RecommendedStock, Recommendation } from "@/types/sector";
-import { HoldingWithValue } from "@/types/holding";
 import { SectorScore } from "@/types/score";
-import { sectorMaster, getDeficientSectors } from "./portfolioAnalyzer";
+import { SECTOR_MASTER as SM, getDeficientSectors } from "@/lib/portfolioAnalyzer";
+import { sectorMaster } from "@/lib/portfolioAnalyzer";
 
-// Built-in recommended stocks for deficient sectors
+// HoldingWithValueの代わりに使う簡易型
+interface SimpleHolding {
+  stock_code: string;
+  sector: string;
+  current_value: number;
+  annual_dividend_total: number;
+  [key: string]: any;
+}
+
 const BUILTIN_RECOMMENDATIONS: RecommendedStock[] = [
-  // 医薬品
   { stock_code: "4502", company_name: "武田薬品工業", sector: "医薬品", priority: 1 },
   { stock_code: "4519", company_name: "中外製薬", sector: "医薬品", priority: 2 },
   { stock_code: "4507", company_name: "塩野義製薬", sector: "医薬品", priority: 3 },
-  // 情報・通信業
   { stock_code: "9432", company_name: "日本電信電話(NTT)", sector: "情報・通信業", priority: 1 },
   { stock_code: "9433", company_name: "KDDI", sector: "情報・通信業", priority: 2 },
   { stock_code: "9434", company_name: "ソフトバンク", sector: "情報・通信業", priority: 3 },
-  // 銀行業
   { stock_code: "8306", company_name: "三菱UFJフィナンシャル・グループ", sector: "銀行業", priority: 1 },
   { stock_code: "8316", company_name: "三井住友フィナンシャルグループ", sector: "銀行業", priority: 2 },
   { stock_code: "8411", company_name: "みずほフィナンシャルグループ", sector: "銀行業", priority: 3 },
-  // 食料品
   { stock_code: "2914", company_name: "日本たばこ産業(JT)", sector: "食料品", priority: 1 },
   { stock_code: "2503", company_name: "キリンホールディングス", sector: "食料品", priority: 2 },
   { stock_code: "2502", company_name: "アサヒグループホールディングス", sector: "食料品", priority: 3 },
-  // REIT
   { stock_code: "3283", company_name: "日本プロロジスリート投資法人", sector: "REIT", priority: 1 },
   { stock_code: "8951", company_name: "日本ビルファンド投資法人", sector: "REIT", priority: 2 },
   { stock_code: "8952", company_name: "ジャパンリアルエステイト投資法人", sector: "REIT", priority: 3 },
-  // 電気機器
   { stock_code: "6758", company_name: "ソニーグループ", sector: "電気機器", priority: 1 },
   { stock_code: "6501", company_name: "日立製作所", sector: "電気機器", priority: 2 },
   { stock_code: "6702", company_name: "富士通", sector: "電気機器", priority: 3 },
-  // 卸売業
   { stock_code: "8031", company_name: "三井物産", sector: "卸売業", priority: 1 },
   { stock_code: "8058", company_name: "三菱商事", sector: "卸売業", priority: 2 },
   { stock_code: "8001", company_name: "伊藤忠商事", sector: "卸売業", priority: 3 },
-  // 保険業
   { stock_code: "8750", company_name: "第一生命ホールディングス", sector: "保険業", priority: 1 },
   { stock_code: "8725", company_name: "MS&ADインシュアランスグループ", sector: "保険業", priority: 2 },
-  // 不動産業
   { stock_code: "8801", company_name: "三井不動産", sector: "不動産業", priority: 1 },
   { stock_code: "8802", company_name: "三菱地所", sector: "不動産業", priority: 2 },
+  { stock_code: "9501", company_name: "東京電力ホールディングス", sector: "電力・ガス業", priority: 1 },
+  { stock_code: "9502", company_name: "中部電力", sector: "電力・ガス業", priority: 2 },
+  { stock_code: "9531", company_name: "東京瓦斯", sector: "電力・ガス業", priority: 3 },
 ];
 
 export function generateRecommendations(
-  holdings: HoldingWithValue[],
+  holdings: SimpleHolding[],
   sectorScores: SectorScore[],
   budget: number,
   recommendedStocks?: RecommendedStock[]
 ): Recommendation[] {
-  const deficientSectors = getDeficientSectors(sectorScores);
+  const deficientSectors = sectorScores
+    .filter((s) => s.isDeficient)
+    .sort((a, b) => {
+      const sectorA = sectorMaster.find((m) => m.sectorName === a.sector);
+      const sectorB = sectorMaster.find((m) => m.sectorName === b.sector);
+      return (sectorB?.weight ?? 0) - (sectorA?.weight ?? 0);
+    })
+    .map((s) => s.sector);
+
   const heldCodes = new Set(holdings.map((h) => h.stock_code));
-
-  const stockPool = recommendedStocks?.length
-    ? recommendedStocks
-    : BUILTIN_RECOMMENDATIONS;
-
+  const stockPool = recommendedStocks?.length ? recommendedStocks : BUILTIN_RECOMMENDATIONS;
   const recommendations: Recommendation[] = [];
 
   for (const sector of deficientSectors.slice(0, 5)) {
@@ -62,11 +68,8 @@ export function generateRecommendations(
       .sort((a, b) => a.priority - b.priority);
 
     const sectorMeta = sectorMaster.find((m) => m.sectorName === sector);
-    const scoreImprovement = sectorMeta
-      ? Math.round((sectorMeta.weight / 10) * 3)
-      : 2;
+    const scoreImprovement = sectorMeta ? Math.round((sectorMeta.weight / 10) * 3) : 2;
 
-    // Main candidate (top priority)
     const main = candidates[0];
     if (main) {
       const estimatedCost = main.current_price
@@ -81,7 +84,6 @@ export function generateRecommendations(
       });
     }
 
-    // Alternatives
     for (const alt of candidates.slice(1, 3)) {
       const estimatedCost = alt.current_price
         ? alt.current_price * 100
