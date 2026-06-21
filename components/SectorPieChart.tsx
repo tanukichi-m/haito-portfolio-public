@@ -56,7 +56,7 @@ const HOLDING_COLORS = [
 ];
 
 const fmt = (n: number) =>
-  n.toLocaleString("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
+  "¥" + Math.round(n).toLocaleString("ja-JP");
 
 const SectorTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {

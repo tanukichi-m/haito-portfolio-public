@@ -13,7 +13,7 @@ interface HoldingsTableProps {
 }
 
 const fmt = (n: number) =>
-  n.toLocaleString("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
+  "¥" + Math.round(n).toLocaleString("ja-JP");
 
 export function HoldingsTable({ holdings, onDelete, onUpdate }: HoldingsTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);

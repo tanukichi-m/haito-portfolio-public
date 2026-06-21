@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import { FloatingCharacter } from "@/components/FloatingCharacter";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "配当ポートフォリオ診断",
+  title: "さいふちゃんの配当ポートフォリオ診断",
   description: "高配当投資家向けポートフォリオ最適化アプリ",
 };
 
@@ -22,13 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       <body className={`${inter.className} bg-slate-50 min-h-screen`}>
         <div className="flex flex-col min-h-screen">
-          {/* Header */}
           <header className="bg-white border-b border-slate-100 sticky top-0 z-50">
             <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
               <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-xl">💰</span>
                 <span className="font-black text-slate-800 text-sm sm:text-base">
-                  配当ポートフォリオ診断
+                  さいふちゃんの配当ポートフォリオ診断
                 </span>
               </Link>
               <nav className="hidden sm:flex items-center gap-1">
@@ -46,10 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </header>
 
-          {/* Main content */}
-          <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-6">{children}</main>
+          <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-6 pb-20 sm:pb-6">
+            {children}
+          </main>
+          <FloatingCharacter />
 
-          {/* Bottom nav for mobile */}
           <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex">
             {navItems.map((item) => (
               <Link
