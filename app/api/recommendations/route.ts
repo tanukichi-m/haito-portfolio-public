@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getStockData } from "@/lib/yahooFinance";
 import {
-// 文字化け対策
-process.env.LANG = "ja_JP.UTF-8";
   Holding,
   calculateSectorRatios,
   getDeficientSectors,
 } from "@/lib/portfolioAnalyzer";
 import { generateRecommendations } from "@/lib/recommendationEngine";
+// 文字化け対策
+process.env.LANG = "ja_JP.UTF-8";
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
 
