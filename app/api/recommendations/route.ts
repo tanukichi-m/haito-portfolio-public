@@ -7,8 +7,6 @@ import {
   getDeficientSectors,
 } from "@/lib/portfolioAnalyzer";
 import { generateRecommendations } from "@/lib/recommendationEngine";
-// 文字化け対策
-process.env.LANG = "ja_JP.UTF-8";
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -51,24 +49,38 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    const sectorRatios     = calculateSectorRatios(holdings);
+    const deficientSectors = getDeficientSectors(sectorRatios);
+
+    const sectorScores = sectorRatios.map((r) => ({
+      sector:       r.sector,
+      ratio:        r.ratio / 100,
+      targetRatio:  0.05,
+      maxRatio:     0.15,
+      isDeficient:  deficientSectors.includes(r.sector),
+      isOverweight: false,
+    }));
+
+    // 不足業種でsectorScoresにないものも追加
+    for (const sector of deficientSectors) {
+      if (!sectorScores.find((s) => s.sector === sector)) {
+        sectorScores.push({
+          sector,
+          ratio: 0,
+          targetRatio: 0.05,
+          maxRatio: 0.15,
+          isDeficient: true,
+          isOverweight: false,
+        });
+      }
+    }
+
+    // DBから推奨銘柄を取得
     const { data: dbRecommended } = await supabaseAdmin
       .from("recommended_stocks")
       .select("*")
       .order("priority");
 
-    const sectorRatios     = calculateSectorRatios(holdings);
-    const deficientSectors = getDeficientSectors(sectorRatios);
-
-    const sectorScores = sectorRatios.map((r) => ({
-  sector:       r.sector,
-  ratio:        r.ratio / 100,
-  targetRatio:  0.05,
-  maxRatio:     0.15,
-  isDeficient:  deficientSectors.includes(r.sector),
-  isOverweight: false,
-}));
-
-    // SimpleHolding形式に変換
     const simpleHoldings = holdings.map((h) => ({
       stock_code:            h.stockCode,
       sector:                h.sector,
@@ -109,8 +121,8 @@ export async function GET(request: NextRequest) {
       .filter(Boolean);
 
     return NextResponse.json({ recommendations: result, budget, deficientSectors });
-  } catch (err) {
-    console.error("GET /api/recommendations error:", err);
-    return NextResponse.json({ error: "推奨取得に失敗しました" }, { status: 500 });
+  } catch (err: any) {
+    console.error("GET /api/recommendations error:", err?.message, err);
+    return NextResponse.json({ error: err?.message || "推奨取得に失敗しました" }, { status: 500 });
   }
 }
