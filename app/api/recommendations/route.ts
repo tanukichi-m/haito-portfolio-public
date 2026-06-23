@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
     const deficientSectors = getDeficientSectors(sectorRatios);
 
     const sectorScores = sectorRatios.map((r) => ({
-      sector:      r.sector,
-      ratio:       r.ratio / 100,
-      targetRatio: 0.05,
-      maxRatio:    0.15,
-      isDeficient: deficientSectors.includes(r.sector),
-      isOverweight: false,
-    }));
+  sector:       r.sector,
+  ratio:        r.ratio / 100,
+  targetRatio:  (r.targetRatio || 5) / 100,
+  maxRatio:     (r.maxRatio || 15) / 100,
+  isDeficient:  deficientSectors.includes(r.sector),
+  isOverweight: r.isOverweight || false,
+}));
 
     // SimpleHolding形式に変換
     const simpleHoldings = holdings.map((h) => ({
