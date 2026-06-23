@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getStockData } from "@/lib/yahooFinance";
 import {
+// 文字化け対策
+process.env.LANG = "ja_JP.UTF-8";
   Holding,
   calculateSectorRatios,
   getDeficientSectors,
